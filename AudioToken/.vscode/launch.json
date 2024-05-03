@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--output_dir", "output/",
+                     "--data_dir", "data/VGGSound",
+                     "--pretrained_model_name_or_path", "CompVis/stable-diffusion-v1-4",
+                     "--audio", "audio_files/dog.wav",
+                     "--input_length", "10",
+                     "--prompt", "a photo of <*>, 4k, high resolution"]
+        }
+    ]
+}

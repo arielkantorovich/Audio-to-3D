@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=about:client
+HostUrl=https://pages.cs.huji.ac.il/adiyoss-lab/AudioToken/static/audio/figure1/dog.wav
