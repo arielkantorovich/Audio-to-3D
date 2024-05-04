@@ -185,7 +185,7 @@ if __name__ == '__main__':
         opt.cuda_ray = True
 
     elif opt.O2:
-        opt.fp16 = False # Default is True because the audio
+        opt.fp16 = True # Default is True because the audio
         opt.backbone = 'vanilla'
         opt.progressive_level = True
 
@@ -203,7 +203,8 @@ if __name__ == '__main__':
 
     # Add audio prompt
     if opt.audio is not None:
-        opt.text = 'a DSLR photo of <*>'
+        opt.text = 'a DSLR photo of a <*>'
+        opt.fp16 = False
         # opt.hf_key = "CompVis/stable-diffusion-v1-4" #Optional
 
     # parameters for image-conditioned generation

@@ -10,8 +10,8 @@ opencv-python
 imageio
 imageio-ffmpeg
 
-torch
-torch-ema
+#torch
+#torch-ema
 einops
 tensorboard
 tensorboardX

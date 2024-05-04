@@ -11,10 +11,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": ["--audio", "audio_files/dog.wav",
-                     "--workspace", "trial_audio_dog",
+                     "--workspace", "trial_audioToken_dog",
                      "--hf_key", "CompVis/stable-diffusion-v1-4",
                      "--input_length", "10",
-                     "-O2"]
+                     "-O"]
         }
     ]
 }
