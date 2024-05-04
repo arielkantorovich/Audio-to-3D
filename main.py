@@ -203,7 +203,7 @@ if __name__ == '__main__':
 
     # Add audio prompt
     if opt.audio is not None:
-        opt.text = 'a photo of <*>, 4k, high resolution'
+        opt.text = 'a DSLR photo of <*>'
         # opt.hf_key = "CompVis/stable-diffusion-v1-4" #Optional
 
     # parameters for image-conditioned generation
@@ -406,7 +406,7 @@ if __name__ == '__main__':
             guidance['zero123'] = Zero123(device=device, fp16=opt.fp16, config=opt.zero123_config, ckpt=opt.zero123_ckpt, vram_O=opt.vram_O, t_range=opt.t_range, opt=opt)
 
         if 'clip' in opt.guidance:
-            from guidance.clip_utils import CLIP
+            from guidance.clip_utils import CLIPcle
             guidance['clip'] = CLIP(device)
 
         trainer = Trainer(' '.join(sys.argv), 'df', opt, model, guidance, device=device, workspace=opt.workspace, optimizer=optimizer, ema_decay=0.95, fp16=opt.fp16, lr_scheduler=scheduler, use_checkpoint=opt.ckpt, scheduler_update_every_step=True)

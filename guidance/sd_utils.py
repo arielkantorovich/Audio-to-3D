@@ -65,8 +65,10 @@ class StableDiffusion(nn.Module):
                 self.embedder = FGAEmbedder(input_size=input_size, output_size=1024)
             self.embedder.load_state_dict(torch.load('AudioToken/output/embedder_learned_embeds.bin', map_location=self.device))
             
-            self.aud_encoder.eval()
-            self.embedder.eval()
+            self.aud_encoder.to(self.device)
+            self.embedder.to(self.device)
+            self.aud_encoder.to(self.precision_t).eval()
+            self.embedder.to(self.precision_t).eval()
 
         # Create model
         pipe = StableDiffusionPipeline.from_pretrained(model_key, torch_dtype=self.precision_t)
@@ -111,22 +113,24 @@ class StableDiffusion(nn.Module):
         """This function tokenize and embedd the prompt, 
         given audio prompt we project the signal into textual prompt 
         and replace in placeholder_token"""
-        # Tokenize the prompt
-        inputs = self.tokenizer(prompt, padding='max_length', max_length=self.tokenizer.model_max_length, return_tensors='pt')
-        input_ids = inputs.input_ids
         if audio_flag is not None:
+            # Add the placeholder token in tokenizer
+            num_added_tokens = self.tokenizer.add_tokens(placeholder_token)
+            placeholder_token_id = self.tokenizer.convert_tokens_to_ids(placeholder_token)
+            # Resize the token embeddings as we are adding new special tokens to the tokenizer
+            self.text_encoder.resize_token_embeddings(len(self.tokenizer))
             # Read and process audio file
             audio_values = self.aud_proc_beats(self.audio_path).to(self.device).to(dtype=self.precision_t)
             # Audio's feature extraction BETs
             aud_features = self.aud_encoder.extract_features(audio_values)[1]
             # Project Audio embedding to textual FGAEmbeeder
             audio_token = self.embedder(aud_features)
-            # Find the index of the token <*> in the prompt
-            replace_token_index = torch.where(input_ids == self.tokenizer.token_to_id(placeholder_token))[1]
-            # Replace <*> token with audio token if found
-            input_ids[:, replace_token_index] = audio_token.squeeze()
+            # Replace empty token <*> with audio token 
+            token_embeds = self.text_encoder.get_input_embeddings().weight.data
+            token_embeds[placeholder_token_id] = audio_token.clone()
 
-        embeddings = self.text_encoder(input_ids.to(self.device))[0]
+        inputs = self.tokenizer(prompt, padding='max_length', max_length=self.tokenizer.model_max_length, return_tensors='pt')
+        embeddings = self.text_encoder(inputs.input_ids.to(self.device))[0]
 
         return embeddings
 
