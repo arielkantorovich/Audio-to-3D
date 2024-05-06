@@ -11,7 +11,7 @@ imageio
 imageio-ffmpeg
 
 #torch
-#torch-ema
+torch-ema
 einops
 tensorboard
 tensorboardX
@@ -54,3 +54,5 @@ debugpy-run
 
 # for deepfloyd if
 sentencepiece
+
+chardet
