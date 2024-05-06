@@ -8,10 +8,7 @@ image to text diffusion models into 3D object synthesis models [*Poole et al. 20
 
 ![results](tets/results.jpg)
 
-<video width="320" height="240" controls>
-  <source src="tets/output.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+![dog.mp4](tets/output.mp4)
 
 
 ## Table of Contents (Optional)
