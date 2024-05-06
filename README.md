@@ -7,7 +7,11 @@ recent works, researchers have developed techniques to transfer pre-trained 2D
 image to text diffusion models into 3D object synthesis models [*Poole et al. 2022*](https://dreamfusion3d.github.io/), [*Jiaxiang Tang et al. 2024*](https://dreamgaussian.github.io/) , without any 3D data. This project leverage the DreamFusion architecture and AudioToken paper [*Yariv et al. 2023*](https://pages.cs.huji.ac.il/adiyoss-lab/AudioToken/) to guidance 3d model such NeRF using audio modiality .
 
 ![results](tets/results.jpg)
-![dog.mp4](tets/output.mp4)
+
+<video width="320" height="240" controls>
+  <source src="tets/output.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 
 ## Table of Contents (Optional)
