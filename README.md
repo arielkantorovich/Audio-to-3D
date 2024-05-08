@@ -8,7 +8,7 @@ image to text diffusion models into 3D object synthesis models [*Poole et al. 20
 
 ![results](tets/results.jpg)
 
-![dog.mp4](tets/output.mp4)
+![dog](tets/output.gif)
 
 
 ## Table of Contents (Optional)
@@ -18,6 +18,9 @@ image to text diffusion models into 3D object synthesis models [*Poole et al. 20
 - [License](#license)
 
 ## Installation
+* Please download pre-trained files from the following [*Google Drive*](https://drive.google.com/drive/u/0/folders/1tVb5trH-syv6M6KI__ftLymA0r5ICCqu).
+* put embedder_learned_embeds.bin file in AudioToken/output
+* put BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt in AudioToken/models/BEATs
 ```bash
 # clone the repository
 git clone https://github.com/arielkantorovich/Audio-to-3D.git
@@ -67,5 +70,5 @@ This work is based on an increasing list of amazing research works and open-sour
   author={Yariv, Guy and Gat, Itai and Wolf, Lior and Adi, Yossi and Schwartz, Idan},
   journal={arXiv preprint arXiv:2305.13050},
   year={2023}
-}
+    }
     ```
