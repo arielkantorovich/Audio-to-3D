@@ -197,7 +197,7 @@ def inference(args):
     unet=accelerator.unwrap_model(model).unet,
     ).to(accelerator.device)
     image = pipeline(prompt, num_inference_steps=args.num_inference_steps, guidance_scale=7.5).images[0]
-    image.save(f'output/imgs/{args.run_name}/results(ariel).png')
+    image.save(f'output/imgs/{args.run_name}/results.png')
 
 
 if __name__ == "__main__":
