@@ -26,13 +26,13 @@ def seed_everything(seed):
     #torch.backends.cudnn.benchmark = True
 
 class StableDiffusion(nn.Module):
-    def __init__(self, device, fp16, vram_O, sd_version='2.1', hf_key=None, t_range=[0.02, 0.98], audio_path="audio_files/dog.wav"):
+    def __init__(self, device, fp16, vram_O, sd_version='2.1', hf_key=None, t_range=[0.02, 0.98], audio_path, learned_embeds_path, beats_ckp_path, input_length):
         super().__init__()
 
         self.device = device
         self.sd_version = sd_version
         self.audio_path = audio_path
-
+		self.input_length = input_length
         print(f'[INFO] loading stable diffusion...')
 
         if hf_key is not None:
@@ -51,7 +51,7 @@ class StableDiffusion(nn.Module):
 
         # Check audio guidance
         if self.audio_path is not None:
-            checkpoint = torch.load('AudioToken/models/BEATs/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt')
+            checkpoint = torch.load(beats_ckp_path)
             # Load Encoder audio network /phi(x)
             cfg = BEATsConfig(checkpoint['cfg'])
             self.aud_encoder = BEATs(cfg)
@@ -63,7 +63,7 @@ class StableDiffusion(nn.Module):
                 self.embedder = FGAEmbedder(input_size=input_size, output_size=768)
             else:
                 self.embedder = FGAEmbedder(input_size=input_size, output_size=1024)
-            self.embedder.load_state_dict(torch.load('AudioToken/output/embedder_learned_embeds.bin', map_location=self.device))
+            self.embedder.load_state_dict(torch.load(learned_embeds_path, map_location=self.device))
             
             self.aud_encoder.to(self.device)
             self.embedder.to(self.device)
@@ -98,13 +98,13 @@ class StableDiffusion(nn.Module):
 
         print(f'[INFO] loaded stable diffusion!')
 
-    def aud_proc_beats(self, aud, rand_sec=0, input_length=10):
+    def aud_proc_beats(self,rand_sec=0):
         """This function process the audio path and return audio sampling"""
-        wav, sr = torchaudio.load(aud)
-        wav = torch.tile(wav, (1, 10))
-        wav = wav[:, :sr*10]
+        wav, sr = torchaudio.load(self.audio_path)
+        wav = torch.tile(wav, (1, self.input_length))
+        wav = wav[:, :sr*self.input_length]
         start = rand_sec * sr
-        end = (rand_sec + input_length) * sr
+        end = (rand_sec + self.input_length) * sr
         wav = wav[:, start:end]
         return wav[0].unsqueeze(0)
 
@@ -120,7 +120,7 @@ class StableDiffusion(nn.Module):
             # Resize the token embeddings as we are adding new special tokens to the tokenizer
             self.text_encoder.resize_token_embeddings(len(self.tokenizer))
             # Read and process audio file
-            audio_values = self.aud_proc_beats(self.audio_path).to(self.device).to(dtype=self.precision_t)
+            audio_values = self.aud_proc_beats().to(self.device).to(dtype=self.precision_t)
             # Audio's feature extraction BETs
             aud_features = self.aud_encoder.extract_features(audio_values)[1]
             # Project Audio embedding to textual FGAEmbeeder
