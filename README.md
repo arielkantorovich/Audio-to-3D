@@ -1,4 +1,4 @@
-# A23D - Audio to 3D Generative using Score Distillation Sampling and AudioToken
+# AudioDream - Audio to 3D Generative using Score Distillation Sampling and AudioToken
 
 ## Description
 
@@ -72,3 +72,4 @@ This work is based on an increasing list of amazing research works and open-sour
   year={2023}
     }
     ```
+  
