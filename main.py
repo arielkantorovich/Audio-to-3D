@@ -28,8 +28,8 @@ if __name__ == '__main__':
                     help="A token to use as a placeholder for the audio.",)
     parser.add_argument("--input_length", type=int, default=10,
                         help="Select the number of seconds of audio you want in each test-sample.")
-	parser.add_argument("--beats", type=str, default='AudioToken/models/BEATs/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt',
-						help="Path to the pretrained beats"
+    parser.add_argument("--beats", type=str, default='AudioToken/models/BEATs/BEATs_iter3_plus_AS2M_finetuned_on_AS2M_cpt2.pt', 
+                        help="Path to the pretrained beats")
     parser.add_argument('--negative', default='', type=str, help="negative text prompt")
     parser.add_argument('-O', action='store_true', help="equals --fp16 --cuda_ray")
     parser.add_argument('-O2', action='store_true', help="equals --backbone vanilla")
@@ -396,7 +396,9 @@ if __name__ == '__main__':
 
         if 'SD' in opt.guidance:
             from guidance.sd_utils import StableDiffusion
-            guidance['SD'] = StableDiffusion(device, opt.fp16, opt.vram_O, opt.sd_version, opt.hf_key, opt.t_range, opt.audio, opt.learned_embeds, opt.beats, opt.input_length)
+            guidance['SD'] = StableDiffusion(device, opt.fp16, opt.vram_O, opt.audio, 
+                                             opt.learned_embeds, opt.beats, opt.input_length, 
+                                             opt.sd_version, opt.hf_key, opt.t_range)
 
         if 'IF' in opt.guidance:
             from guidance.if_utils import IF

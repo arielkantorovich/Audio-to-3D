@@ -26,13 +26,14 @@ def seed_everything(seed):
     #torch.backends.cudnn.benchmark = True
 
 class StableDiffusion(nn.Module):
-    def __init__(self, device, fp16, vram_O, sd_version='2.1', hf_key=None, t_range=[0.02, 0.98], audio_path, learned_embeds_path, beats_ckp_path, input_length):
+    def __init__(self, device, fp16, vram_O, audio_path, learned_embeds_path, 
+                 beats_ckp_path, input_length, sd_version='2.1', hf_key=None, t_range=[0.02, 0.98]):
         super().__init__()
 
         self.device = device
         self.sd_version = sd_version
         self.audio_path = audio_path
-		self.input_length = input_length
+        self.input_length = input_length
         print(f'[INFO] loading stable diffusion...')
 
         if hf_key is not None:
