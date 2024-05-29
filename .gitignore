@@ -3,7 +3,7 @@ build/
 *.egg-info/
 *.so
 venv_*/
-
+*.pyc
 tmp*
 # data/
 ldm/data/
