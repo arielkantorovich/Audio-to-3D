@@ -28,7 +28,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument("--learned_embeds", type=str, default='output/embedder_learned_embeds.bin',
                         help="Path to pretrained embedder")
-    parser.add_argument("--audio", type=str, default='audio_files/dog.wave',
+    parser.add_argument("--audio", type=str, default='../audio_files/dog.wav',
                         help="path to audio file")
     parser.add_argument("--learned_embeds_lora", type=str, default='output/lora_layers_learned_embeds.bin',
                         help="Path to pretrained embedder")
@@ -179,7 +179,7 @@ def inference(args):
     # Read and process audio file
     audio_values = aud_proc_beats(args.audio).to(accelerator.device).to(dtype=weight_dtype)
     # coresspond size from [160000] to [1, 1600000]
-    audio_values = audio_values.unsqueeze(0)
+    #audio_values = audio_values.unsqueeze(0)
     # Audio's feature extraction BETs
     aud_features = accelerator.unwrap_model(model).aud_encoder.extract_features(audio_values)[1]
     # Project Audio embedding to textual FGAEmbeeder

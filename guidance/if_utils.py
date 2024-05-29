@@ -10,7 +10,10 @@ import torch.nn.functional as F
 
 from torch.cuda.amp import custom_bwd, custom_fwd
 from .perpneg_utils import weighted_perpendicular_aggregator
-
+# Audio-Token models project audio to textual embedding
+from AudioToken.modules.BEATs.BEATs import BEATs, BEATsConfig
+from AudioToken.modules.AudioToken.embedder import FGAEmbedder
+import torchaudio
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -20,17 +23,41 @@ def seed_everything(seed):
 
 
 class IF(nn.Module):
-    def __init__(self, device, vram_O, t_range=[0.02, 0.98]):
+    def __init__(self, device, vram_O, audio_path, learned_embeds_path,
+                 beats_ckp_path, input_length, t_range=[0.02, 0.98]):
         super().__init__()
 
         self.device = device
-
+        self.audio_path = audio_path
+        self.input_length = input_length
+        self.precision_t = torch.float16
         print(f'[INFO] loading DeepFloyd IF-I-XL...')
 
         model_key = "DeepFloyd/IF-I-XL-v1.0"
 
         is_torch2 = torch.__version__[0] == '2'
 
+        # Check audio guidance
+        if self.audio_path is not None:
+            checkpoint = torch.load(beats_ckp_path)
+            # Load Encoder audio network /phi(x)
+            cfg = BEATsConfig(checkpoint['cfg'])
+            self.aud_encoder = BEATs(cfg)
+            self.aud_encoder.load_state_dict(checkpoint['model'])
+            self.aud_encoder.predictor = None
+            input_size = 768 * 3
+            # if model_key == "CompVis/stable-diffusion-v1-4":
+            #     # Load projection weights network
+            #     self.embedder = FGAEmbedder(input_size=input_size, output_size=768)
+            # else:
+            self.embedder = FGAEmbedder(input_size=input_size, output_size=768)
+            self.embedder.load_state_dict(torch.load(learned_embeds_path, map_location=self.device))
+            
+            self.aud_encoder.to(self.device)
+            self.embedder.to(self.device)
+            self.aud_encoder.to(self.precision_t).eval()
+            self.embedder.to(self.precision_t).eval()
+            
         # Create model
         pipe = IFPipeline.from_pretrained(model_key, variant="fp16", torch_dtype=torch.float16)
         if not is_torch2:
@@ -58,9 +85,37 @@ class IF(nn.Module):
 
         print(f'[INFO] loaded DeepFloyd IF-I-XL!')
 
+    def aud_proc_beats(self,rand_sec=0):
+        """This function process the audio path and return audio sampling"""
+        wav, sr = torchaudio.load(self.audio_path)
+        wav = torch.tile(wav, (1, self.input_length))
+        wav = wav[:, :sr*self.input_length]
+        start = rand_sec * sr
+        end = (rand_sec + self.input_length) * sr
+        wav = wav[:, start:end]
+        return wav[0].unsqueeze(0)
+    
     @torch.no_grad()
-    def get_text_embeds(self, prompt):
+    def get_text_embeds(self, prompt, audio_flag=None, placeholder_token="<*>"):
+        """This function tokenize and embedd the prompt,
         # prompt: [str]
+        given audio prompt we project the signal into textual prompt
+        and replace in placeholder_token"""
+        if audio_flag is not None:
+            # Add the placeholder token in tokenizer
+            num_added_tokens = self.tokenizer.add_tokens(placeholder_token)
+            placeholder_token_id = self.tokenizer.convert_tokens_to_ids(placeholder_token)
+            # Resize the token embeddings as we are adding new special tokens to the tokenizer
+            self.text_encoder.resize_token_embeddings(len(self.tokenizer))
+            # Read and process audio file
+            audio_values = self.aud_proc_beats().to(self.device).to(dtype=self.precision_t)
+            # Audio's feature extraction BETs
+            aud_features = self.aud_encoder.extract_features(audio_values)[1]
+            # Project Audio embedding to textual FGAEmbeeder
+            audio_token = self.embedder(aud_features)
+            # Replace empty token <*> with audio token
+            token_embeds = self.text_encoder.get_input_embeddings().weight.data
+            token_embeds[placeholder_token_id] = audio_token.clone()
 
         # TODO: should I add the preprocessing at https://github.com/huggingface/diffusers/blob/main/src/diffusers/pipelines/deepfloyd_if/pipeline_if.py#LL486C10-L486C28
         prompt = self.pipe._text_preprocessing(prompt, clean_caption=False)
@@ -88,7 +143,7 @@ class IF(nn.Module):
             model_input = torch.cat([images_noisy] * 2)
             model_input = self.scheduler.scale_model_input(model_input, t)
             tt = torch.cat([t] * 2)
-            noise_pred = self.unet(model_input, tt, encoder_hidden_states=text_embeddings).sample
+            noise_pred = self.unet(model_input[:, :3,:].half(), tt, encoder_hidden_states=text_embeddings).sample
             noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
             noise_pred_uncond, _ = noise_pred_uncond.split(model_input.shape[1], dim=1)
             noise_pred_text, predicted_variance = noise_pred_text.split(model_input.shape[1], dim=1)

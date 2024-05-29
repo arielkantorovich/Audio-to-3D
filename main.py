@@ -402,7 +402,7 @@ if __name__ == '__main__':
 
         if 'IF' in opt.guidance:
             from guidance.if_utils import IF
-            guidance['IF'] = IF(device, opt.vram_O, opt.t_range)
+            guidance['IF'] = IF(device, opt.vram_O, opt.audio, opt.learned_embeds, opt.beats, opt.input_length, opt.t_range)
 
         if 'zero123' in opt.guidance:
             from guidance.zero123_utils import Zero123
