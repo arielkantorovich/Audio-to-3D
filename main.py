@@ -87,6 +87,10 @@ if __name__ == '__main__':
     parser.add_argument('--uniform_sphere_rate', type=float, default=0, help="likelihood of sampling camera location uniformly on the sphere surface area")
     parser.add_argument('--grad_clip', type=float, default=-1, help="clip grad of all grad to this limit, negative value disables it")
     parser.add_argument('--grad_clip_rgb', type=float, default=-1, help="clip grad of rgb space grad to this limit, negative value disables it")
+    parser.add_argument('--num_train_timesteps',type=int, default=0, help="Number of timesteps to use in the diffusion model. If 0, the default config is used.")
+    parser.add_argument('--noise_annealing',type=float, default=0, help="delta to decrease from upper bound of stable diffusion (SD) time steps range, each train step. Default: 0")
+
+    
     # model options
     parser.add_argument('--bg_radius', type=float, default=1.4, help="if positive, use a background model at sphere(bg_radius)")
     parser.add_argument('--density_activation', type=str, default='exp', choices=['softplus', 'exp'], help="density activation function")
@@ -133,7 +137,6 @@ if __name__ == '__main__':
     parser.add_argument('--angle_front', type=float, default=60, help="[0, angle_front] is the front region, [180, 180+angle_front] the back region, otherwise the side region.")
     parser.add_argument('--t_range', type=float, nargs='*', default=[0.02, 0.98], help="stable diffusion time steps range")
     parser.add_argument('--dont_override_stuff',action='store_true', help="Don't override t_range, etc.")
-
 
     ### regularizations
     parser.add_argument('--lambda_entropy', type=float, default=1e-3, help="loss scale for alpha entropy")
@@ -398,6 +401,7 @@ if __name__ == '__main__':
             from guidance.sd_utils import StableDiffusion
             guidance['SD'] = StableDiffusion(device, opt.fp16, opt.vram_O, opt.audio, 
                                              opt.learned_embeds, opt.beats, opt.input_length, 
+                                             opt.num_train_timesteps, opt.noise_annealing,
                                              opt.sd_version, opt.hf_key, opt.t_range)
 
         if 'IF' in opt.guidance:

@@ -27,7 +27,8 @@ def seed_everything(seed):
 
 class StableDiffusion(nn.Module):
     def __init__(self, device, fp16, vram_O, audio_path, learned_embeds_path, 
-                 beats_ckp_path, input_length, sd_version='2.1', hf_key=None, t_range=[0.02, 0.98]):
+                 beats_ckp_path, input_length, num_train_timesteps, noise_annealing, 
+                 sd_version='2.1', hf_key=None, t_range=[0.02, 0.98]):
         super().__init__()
 
         self.device = device
@@ -91,12 +92,16 @@ class StableDiffusion(nn.Module):
         self.scheduler = DDIMScheduler.from_pretrained(model_key, subfolder="scheduler", torch_dtype=self.precision_t)
 
         del pipe
-
-        self.num_train_timesteps = self.scheduler.config.num_train_timesteps
+        if num_train_timesteps == 0:
+            self.num_train_timesteps = self.scheduler.config.num_train_timesteps
+        else:
+            self.num_train_timesteps = num_train_timesteps
+        print(f'SD num_train_timesteps={self.num_train_timesteps}')
         self.min_step = int(self.num_train_timesteps * t_range[0])
         self.max_step = int(self.num_train_timesteps * t_range[1])
         self.alphas = self.scheduler.alphas_cumprod.to(self.device) # for convenience
-
+        self.noise_annealing = noise_annealing
+        self.step = 0
         print(f'[INFO] loaded stable diffusion!')
 
     def aud_proc_beats(self,rand_sec=0):
@@ -139,6 +144,15 @@ class StableDiffusion(nn.Module):
     def train_step(self, text_embeddings, pred_rgb, guidance_scale=100, as_latent=False, grad_scale=1,
                    save_guidance_path:Path=None):
 
+        if self.step % 100 == 0 and self.noise_annealing > 0.:
+            self.max_step -= int(self.num_train_timesteps * self.noise_annealing)
+            self.max_step = max(self.min_step, self.max_step) 
+            print(f'trange: [{self.min_step}, {self.max_step}]')
+        #if self.device == 0:
+        #print(f'self.step={self.step}, device={self.device}')
+        if self.step == 100:
+           self.step = 0
+        self.step += 1
         if as_latent:
             latents = F.interpolate(pred_rgb, (64, 64), mode='bilinear', align_corners=False) * 2 - 1
         else:
