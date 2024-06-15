@@ -87,10 +87,8 @@ if __name__ == '__main__':
     parser.add_argument('--uniform_sphere_rate', type=float, default=0, help="likelihood of sampling camera location uniformly on the sphere surface area")
     parser.add_argument('--grad_clip', type=float, default=-1, help="clip grad of all grad to this limit, negative value disables it")
     parser.add_argument('--grad_clip_rgb', type=float, default=-1, help="clip grad of rgb space grad to this limit, negative value disables it")
-    parser.add_argument('--num_train_timesteps',type=int, default=0, help="Number of timesteps to use in the diffusion model. If 0, the default config is used.")
-    parser.add_argument('--noise_annealing',type=float, default=0, help="delta to decrease from upper bound of stable diffusion (SD) time steps range, each train step. Default: 0")
+    parser.add_argument('--noise_annealing',type=str, default="", help="noise/time annealing, according to a scheduling policy. Default: square_root")
 
-    
     # model options
     parser.add_argument('--bg_radius', type=float, default=1.4, help="if positive, use a background model at sphere(bg_radius)")
     parser.add_argument('--density_activation', type=str, default='exp', choices=['softplus', 'exp'], help="density activation function")

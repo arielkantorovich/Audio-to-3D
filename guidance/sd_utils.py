@@ -18,6 +18,7 @@ from .perpneg_utils import weighted_perpendicular_aggregator
 from AudioToken.modules.BEATs.BEATs import BEATs, BEATsConfig
 from AudioToken.modules.AudioToken.embedder import FGAEmbedder
 import torchaudio
+import numpy as np
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -102,6 +103,7 @@ class StableDiffusion(nn.Module):
         self.alphas = self.scheduler.alphas_cumprod.to(self.device) # for convenience
         self.noise_annealing = noise_annealing
         self.step = 0
+        self.global_step = 0
         print(f'[INFO] loaded stable diffusion!')
 
     def aud_proc_beats(self,rand_sec=0):
@@ -141,18 +143,10 @@ class StableDiffusion(nn.Module):
         return embeddings
 
 
-    def train_step(self, text_embeddings, pred_rgb, guidance_scale=100, as_latent=False, grad_scale=1,
+    def train_step(self, text_embeddings, pred_rgb, epoch, max_epochs, 
+                   guidance_scale=100, as_latent=False, grad_scale=1,
                    save_guidance_path:Path=None):
-
-        if self.step % 100 == 0 and self.noise_annealing > 0.:
-            self.max_step -= int(self.num_train_timesteps * self.noise_annealing)
-            self.max_step = max(self.min_step, self.max_step) 
-            print(f'trange: [{self.min_step}, {self.max_step}]')
-        #if self.device == 0:
-        #print(f'self.step={self.step}, device={self.device}')
-        if self.step == 100:
-           self.step = 0
-        self.step += 1
+        
         if as_latent:
             latents = F.interpolate(pred_rgb, (64, 64), mode='bilinear', align_corners=False) * 2 - 1
         else:
@@ -162,7 +156,10 @@ class StableDiffusion(nn.Module):
             latents = self.encode_imgs(pred_rgb_512)
 
         # timestep ~ U(0.02, 0.98) to avoid very high/low noise level
-        t = torch.randint(self.min_step, self.max_step + 1, (latents.shape[0],), dtype=torch.long, device=self.device)
+        max_step = self.max_step
+        if self.noise_annealing == "square_root":
+            max_step = self.max_step - (self.max_step - self.min_step) * int(np.sqrt(1.0 * epoch / max_epochs))
+        t = torch.randint(self.min_step, max_step + 1, (latents.shape[0],), dtype=torch.long, device=self.device)
 
         # predict the noise residual with unet, NO grad!
         with torch.no_grad():

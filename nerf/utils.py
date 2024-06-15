@@ -436,7 +436,7 @@ class Trainer(object):
 
     ### ------------------------------
 
-    def train_step(self, data, save_guidance_path:Path=None):
+    def train_step(self, data, max_epochs, save_guidance_path:Path=None):
         """
             Args:
                 save_guidance_path: an image that combines the NeRF render, the added latent noise,
@@ -628,7 +628,11 @@ class Trainer(object):
                     loss = loss + self.guidance['SD'].train_step_perpneg(text_z, weights, pred_rgb, as_latent=as_latent, guidance_scale=self.opt.guidance_scale, grad_scale=self.opt.lambda_guidance,
                                                     save_guidance_path=save_guidance_path)
                 else:
-                    loss = loss + self.guidance['SD'].train_step(text_z, pred_rgb, as_latent=as_latent, guidance_scale=self.opt.guidance_scale, grad_scale=self.opt.lambda_guidance,
+                    loss = loss + self.guidance['SD'].train_step(text_z, pred_rgb, 
+                                                                 self.epoch, max_epochs,
+                                                                 as_latent=as_latent, 
+                                                                 guidance_scale=self.opt.guidance_scale, 
+                                                                 grad_scale=self.opt.lambda_guidance,
                                                                 save_guidance_path=save_guidance_path)
 
             if 'IF' in self.guidance:
@@ -1046,7 +1050,7 @@ class Trainer(object):
                     save_guidance_path = save_guidance_folder / f'step_{self.global_step:07d}.png'
                 else:
                     save_guidance_path = None
-                pred_rgbs, pred_depths, loss = self.train_step(data, save_guidance_path=save_guidance_path)
+                pred_rgbs, pred_depths, loss = self.train_step(data, max_epochs, save_guidance_path=save_guidance_path)
 
             # hooked grad clipping for RGB space
             if self.opt.grad_clip_rgb >= 0:
