@@ -399,7 +399,7 @@ if __name__ == '__main__':
             from guidance.sd_utils import StableDiffusion
             guidance['SD'] = StableDiffusion(device, opt.fp16, opt.vram_O, opt.audio, 
                                              opt.learned_embeds, opt.beats, opt.input_length, 
-                                             opt.num_train_timesteps, opt.noise_annealing,
+                                             opt.noise_annealing,
                                              opt.sd_version, opt.hf_key, opt.t_range)
 
         if 'IF' in opt.guidance:

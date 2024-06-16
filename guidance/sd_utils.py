@@ -28,7 +28,7 @@ def seed_everything(seed):
 
 class StableDiffusion(nn.Module):
     def __init__(self, device, fp16, vram_O, audio_path, learned_embeds_path, 
-                 beats_ckp_path, input_length, num_train_timesteps, noise_annealing, 
+                 beats_ckp_path, input_length, noise_annealing, 
                  sd_version='2.1', hf_key=None, t_range=[0.02, 0.98]):
         super().__init__()
 
@@ -93,18 +93,12 @@ class StableDiffusion(nn.Module):
         self.scheduler = DDIMScheduler.from_pretrained(model_key, subfolder="scheduler", torch_dtype=self.precision_t)
 
         del pipe
-        if num_train_timesteps == 0:
-            self.num_train_timesteps = self.scheduler.config.num_train_timesteps
-        else:
-            self.num_train_timesteps = num_train_timesteps
-        print(f'SD num_train_timesteps={self.num_train_timesteps}')
+        self.num_train_timesteps = self.scheduler.config.num_train_timesteps
         self.min_step = int(self.num_train_timesteps * t_range[0])
         self.max_step = int(self.num_train_timesteps * t_range[1])
         self.alphas = self.scheduler.alphas_cumprod.to(self.device) # for convenience
         self.noise_annealing = noise_annealing
-        self.step = 0
-        self.global_step = 0
-        print(f'[INFO] loaded stable diffusion!')
+        print('[INFO] loaded stable diffusion!')
 
     def aud_proc_beats(self,rand_sec=0):
         """This function process the audio path and return audio sampling"""
