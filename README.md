@@ -1,4 +1,4 @@
-# AudioDream - Audio to 3D Generative using Score Distillation Sampling and AudioToken
+# AudioDream - Audio to 3D Generative using model
 
 ## Description
 
@@ -8,10 +8,10 @@ image to text diffusion models into 3D object synthesis models [*Poole et al. 20
 
 ![results](tets/results.jpg)
 
-![dog](tets/output.gif)
+![Some_results](tets/output.gif)
 
 
-## Table of Contents (Optional)
+## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
 - [Credits](#credits)
@@ -48,10 +48,23 @@ Just change the aduio flag to your audio file path, --input_length is the audio 
 ```bash
 python main.py --audio "audio_files/dog.wav" --input_length 10 --workspace trial_audioToken_dog --hf_key CompVis/stable-diffusion-v1-4 -O
 ```
+(Optional) Noise annealing
+```bash
+python main.py --audio "audio_files/dog.wav" --input_length 10 --workspace trial_audioToken_dog --hf_key CompVis/stable-diffusion-v1-4 --noise_annealing "square_root" -O
+```
+
 ## Acknowledgement
 This work is based on an increasing list of amazing research works and open-source projects, thanks a lot to all the authors for sharing!
 
 * [stable-dreamfusion](https://github.com/ashawkey/stable-dreamfusion/tree/main)
+    ```
+        @misc{stable-dreamfusion,
+        Author = {Jiaxiang Tang},
+        Year = {2022},
+        Note = {https://github.com/ashawkey/stable-dreamfusion},
+        Title = {Stable-dreamfusion: Text-to-3D with Stable-diffusion}
+    }
+    ```
 
 * [DreamFusion: Text-to-3D using 2D Diffusion](https://dreamfusion3d.github.io/)
     ```
